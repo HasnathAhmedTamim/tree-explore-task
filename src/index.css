@@ -1,0 +1,119 @@
+@import "tailwindcss";
+
+/* Light theme tweaks to match reference UI */
+:root {
+	/* tuned colors to match reference */
+		--card-border: #dbeaf5; /* pale blue */
+		--connector: #e6edf3;
+		--muted: #111827;
+		--panel-bg: #ffffff;
+		--sky-border: #bfdbfe; /* tailwind sky-200 */
+		/* connector tuning variables */
+		--connector-left: 20px;
+		--connector-top: 1rem;
+}
+
+html, body, #root {
+	height: 100%;
+}
+
+body {
+	margin: 0;
+	background: #ffffff; /* light background */
+	color: var(--muted);
+	font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+
+/* Sidebar card */
+.tree-card {
+	border-radius: 8px;
+	border: 1px solid var(--card-border);
+	background: var(--panel-bg);
+}
+
+/* ensure sidebar card doesn't overflow horizontally and respects container width */
+.tree-card {
+	box-sizing: border-box;
+	max-width: 100%;
+	/* avoid horizontal scroll; prefer truncation/wrapping */
+	overflow: hidden;
+}
+
+/* keep the internal node list vertically scrollable */
+.tree-card .overflow-auto {
+	max-width: 100%;
+	box-sizing: border-box;
+	overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+	/* make tree card and panels more compact on small screens */
+	.tree-card {
+		padding: 10px;
+	}
+	.panel-wrapper {
+		padding: 10px;
+	}
+	.mono-json {
+		font-size: 13px;
+	}
+}
+
+/* Connector lines inside tree */
+.tree-connector-vertical {
+	position: absolute;
+	left: var(--connector-left); /* align with node text */
+	/* move connector slightly lower so it lines up better when labels wrap to multiple lines */
+	top: calc(var(--connector-top) - 0.1rem);
+	bottom: 0;
+	width: 1px;
+	background: var(--connector);
+}
+.tree-connector-horz {
+	position: absolute;
+	left: 0;
+	/* slight adjustment to line up with wrapped/multi-line rows */
+	top: var(--connector-top);
+	width: 12px;
+	height: 1px;
+	background: var(--connector);
+}
+
+/* JSON panel dashed border */
+.dashed-panel {
+	border-style: dashed;
+	border-width: 2px;
+	border-color: var(--sky-border);
+	background: var(--panel-bg);
+}
+
+/* panel wrapper: outer card used around JSON views to make the sky-blue border visible */
+.panel-wrapper {
+	background: var(--panel-bg);
+	border-radius: 6px;
+	padding: 16px;
+	border: 1px solid var(--sky-border);
+}
+
+/* Delete button slight shadow to match screenshot */
+.delete-btn {
+	box-shadow: 0 1px 0 rgba(0,0,0,0.08);
+}
+
+/* Breadcrumb big title */
+.breadcrumb-title {
+	font-size: 22px;
+	font-weight: 600;
+}
+
+/* monospaced terminal-like JSON */
+.mono-json {
+	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Courier New', monospace;
+	font-size: 14px;
+	line-height: 1.5;
+	/* allow long JSON tokens to wrap instead of overflowing */
+	white-space: pre-wrap; /* ensure wrapping */
+	word-break: break-word;
+	overflow-wrap: anywhere;
+}
+
