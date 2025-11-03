@@ -66,6 +66,11 @@ Implemented features
 - JSON details panel and full object panel
 - Persistence via localStorage (key: `tree-explorer:data`)
 
+Bonus features implemented
+--------------------------
+
+- Keyboard navigation, Undo history, Docker multi-stage build, and accessibility improvements (focus rings, aria-labels)
+
 Why these choices
 ------------------
 
