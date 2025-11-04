@@ -5,11 +5,9 @@ A small React + Vite app that renders a collapsible JSON/object tree (Explorer-l
 Live demo
 ---------
 
-- Replace the placeholder below with your deployed Vercel/Netlify URL after you deploy. I intentionally left this as a placeholder so you can paste your live URL.
+- Replace the placeholder below with your deployed Vercel URL after you deploy.
 
 **LIVE DEMO:** https://tree-explore-task.vercel.app/
-
-If you'd like, I can deploy this repository to Vercel for you and update this link.
 
 Implemented features
 --------------------
@@ -22,21 +20,7 @@ Implemented features
 - Keyboard navigation: ArrowUp / ArrowDown to move, ArrowLeft / ArrowRight to collapse/expand, Enter to toggle
 - Accessible focus rings and aria labels on action buttons
 - Breadcrumb for the selected node
-- JSON details panel and full object panel
-# Tree Explorer
-
-Compact React + Vite app for exploring and editing JSON as a collapsible tree.
-
-Live demo
----------
-
-**LIVE DEMO:** https://tree-explore-task.vercel.app/
-
-Quick summary
--------------
-- Import JSON and render it as a collapsible tree
-- Add / Rename / Delete nodes (root delete prevented)
-- Undo stack (in-memory), keyboard navigation, and accessibility improvements
+- Full Object panel (formatted JSON)
 - Persistence via localStorage (key: `tree-explorer:data`)
 
 Bonus (nice-to-have)
@@ -82,7 +66,6 @@ docker run -p 8080:80 tree-explorer
 
 Deploy
 ------
-- Netlify: build and drag the `dist/` folder onto Netlify's deploy panel.
 - Vercel: connect the repo in the dashboard or run `vercel` from the project root.
 
 Files of interest
