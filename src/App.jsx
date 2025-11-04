@@ -303,7 +303,7 @@ export default function App() {
             <h2 className="text-xl font-semibold">Tree</h2>
           </div>
 
-          <div className="overflow-auto" style={{ maxHeight: '70vh' }}>
+          <div className="overflow-auto" role="tree" aria-label="JSON tree" tabIndex={0} style={{ maxHeight: '70vh' }}>
             {topKeys.map((k) => (
               <div key={k} className="mb-3">
                 <TreeNode
