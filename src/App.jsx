@@ -214,7 +214,7 @@ export default function App() {
         let value
         try {
           value = raw ? JSON.parse(raw) : ''
-        } catch (e) {
+        } catch {
           // treat as string if invalid JSON
           value = raw
         }

@@ -23,7 +23,7 @@ Implemented features
 - Full Object panel (formatted JSON)
 - Persistence via localStorage (key: `tree-explorer:data`)
 
-Bonus (nice-to-have)
+Bonus (Implemented)
 -------------------
 
 The project includes three of the four listed bonus items:
