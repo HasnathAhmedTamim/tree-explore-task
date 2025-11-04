@@ -6,16 +6,16 @@ export default function Modal({ title, children, onClose }) {
 
   useEffect(() => {
     previouslyFocused.current = document.activeElement
-    const node = rootRef.current
-    if (!node) return
-    // focus first focusable element inside modal
-    const focusable = node.querySelector('button, [href], input, textarea, select, [tabindex]:not([tabindex="-1"])')
-    if (focusable) focusable.focus()
+  const node = rootRef.current
+  if (!node) return
+  // focus first focusable element inside modal (prefer inputs over buttons)
+  const focusable = node.querySelector('input, textarea, select, button, [href], [tabindex]:not([tabindex="-1"])')
+  if (focusable) focusable.focus()
 
     function onKey(e) {
       if (e.key === 'Escape') onClose()
       if (e.key === 'Tab') {
-        const focusables = Array.from(node.querySelectorAll('button, [href], input, textarea, select, [tabindex]:not([tabindex="-1"])'))
+        const focusables = Array.from(node.querySelectorAll('input, textarea, select, button, [href], [tabindex]:not([tabindex="-1"])'))
         if (focusables.length === 0) return
         const first = focusables[0]
         const last = focusables[focusables.length - 1]
