@@ -297,18 +297,10 @@ export default function App() {
         </div>
 
         <div className="max-w-5xl mx-auto w-full">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="panel-wrapper flex flex-col min-h-[40vh]">
-              <h3 className="mb-2 font-medium">Details</h3>
-              <div className="dashed-panel flex-1 overflow-auto p-4">
-                <JSONView data={getValueAtPath(data, selectedPath) ?? {}} />
-              </div>
-            </div>
-            <div className="panel-wrapper flex flex-col min-h-[40vh]">
-              <h3 className="mb-2 font-medium">Full Object</h3>
-              <div className="dashed-panel flex-1 overflow-auto p-4">
-                <JSONView data={data} />
-              </div>
+          <div className="panel-wrapper flex flex-col min-h-[40vh]">
+            <h3 className="mb-2 font-medium">Full Object</h3>
+            <div className="dashed-panel flex-1 overflow-auto p-4">
+              <JSONView data={data} />
             </div>
           </div>
         </div>
