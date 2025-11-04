@@ -1,8 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import TreeNode from './components/TreeNode'
 import Breadcrumb from './components/Breadcrumb'
-import Modal from './components/Modal'
-import ConfirmModal from './components/ConfirmModal'
+import Swal from 'sweetalert2'
 import JSONView from './components/JSONView'
 import { deleteAtPath, getValueAtPath, addKeyAtPath, renameKeyAtPath } from './utils/tree'
 
@@ -129,9 +128,7 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey)
   }, [data, selectedPath, collapsedSet, toggleCollapse])
 
-  const [showImport, setShowImport] = useState(false)
-  const [importText, setImportText] = useState('')
-  const [importError, setImportError] = useState('')
+  // using SweetAlert2 modals instead of local Modal components
 
   // Undo/history
   const [history, setHistory] = useState([])
@@ -153,23 +150,30 @@ export default function App() {
     })
   }
 
-  const [confirmDelete, setConfirmDelete] = useState(null)
-
-  // Add / Rename modal
-  const [modalAction, setModalAction] = useState(null) // { type: 'add'|'rename', path }
-  const [modalKeyInput, setModalKeyInput] = useState('')
-  const [modalValueInput, setModalValueInput] = useState('')
-
-  const handleImport = () => {
-    try {
-      const parsed = JSON.parse(importText)
+  // helper functions that use SweetAlert2 for import/add/rename/delete modals
+  async function showImportSwal() {
+    const result = await Swal.fire({
+      title: 'Import JSON',
+      input: 'textarea',
+      inputLabel: 'Paste JSON here',
+      inputPlaceholder: '{\n  "key": "value"\n}',
+      showCancelButton: true,
+      preConfirm: (text) => {
+        try {
+          return JSON.parse(text)
+        } catch (e) {
+          Swal.showValidationMessage('Invalid JSON: ' + e.message)
+          return false
+        }
+      },
+      confirmButtonText: 'Import',
+    })
+    if (result.isConfirmed && result.value !== undefined) {
       pushHistory(data, 'import')
-      setData(parsed)
-      setShowImport(false)
-      setImportText('')
-      setImportError('')
-    } catch (e) {
-      setImportError(e.message)
+      setData(result.value)
+      // select first top-level key if present
+      const keys = Object.keys(result.value || {})
+      setSelectedPath(keys.length ? [keys[0]] : [])
     }
   }
 
@@ -179,65 +183,94 @@ export default function App() {
 
   function requestDelete(path) {
     if (path.length === 1) return // root cannot be deleted
-    setConfirmDelete(path)
-  }
-
-  function performDelete() {
-    if (!confirmDelete) return
-    try {
-      pushHistory(data, 'delete')
-      const next = deleteAtPath(data, confirmDelete)
-      setData(next)
-      setConfirmDelete(null)
-    } catch {
-      // show error (not implemented)
-      setConfirmDelete(null)
-    }
+    showDeleteSwal(path)
   }
 
   function handleAddRequest(path) {
-    setModalAction({ type: 'add', path })
-    setModalKeyInput('')
-    setModalValueInput('')
+    showAddSwal(path)
   }
 
   function handleRenameRequest(path) {
-    setModalAction({ type: 'rename', path })
-    const currentKey = path[path.length - 1] || ''
-    setModalKeyInput(currentKey)
+    showRenameSwal(path)
   }
 
-  function performModalAction() {
-    if (!modalAction) return
-    if (modalAction.type === 'add') {
-      // add key under modalAction.path
-      const parentPath = modalAction.path || []
-      const key = modalKeyInput.trim()
-      if (!key) return
-      let value
-      try {
-        value = modalValueInput ? JSON.parse(modalValueInput) : ''
-      } catch {
-        value = modalValueInput
-      }
-  pushHistory(data, 'add')
-  const next = addKeyAtPath(data, parentPath, key, value)
-  setData(next)
-  // select the newly added node
-  setSelectedPath([...parentPath, key])
-  setModalAction(null)
-    } else if (modalAction.type === 'rename') {
-      const path = modalAction.path
-      const newKey = modalKeyInput.trim()
-      if (!newKey) return
+  async function showAddSwal(parentPath) {
+    const html = `
+      <input id="swal-key" class="swal2-input" placeholder="Key">
+      <textarea id="swal-value" class="swal2-textarea" placeholder='Value (JSON or plain)'></textarea>
+    `
+    const result = await Swal.fire({
+      title: 'Add node',
+      html,
+      focusConfirm: false,
+      showCancelButton: true,
+      preConfirm: () => {
+        const key = document.getElementById('swal-key')?.value?.trim()
+        const raw = document.getElementById('swal-value')?.value
+        if (!key) {
+          Swal.showValidationMessage('Key is required')
+          return false
+        }
+        let value
+        try {
+          value = raw ? JSON.parse(raw) : ''
+        } catch (e) {
+          // treat as string if invalid JSON
+          value = raw
+        }
+        return { key, value }
+      },
+      confirmButtonText: 'Add',
+    })
+    if (result.isConfirmed && result.value) {
+      pushHistory(data, 'add')
+      const next = addKeyAtPath(data, parentPath || [], result.value.key, result.value.value)
+      setData(next)
+      setSelectedPath([...(parentPath || []), result.value.key])
+    }
+  }
+
+  async function showRenameSwal(path) {
+    const currentKey = path[path.length - 1] || ''
+    const result = await Swal.fire({
+      title: 'Rename node',
+      input: 'text',
+      inputValue: currentKey,
+      showCancelButton: true,
+      preConfirm: (v) => v && v.trim() ? v.trim() : Swal.showValidationMessage('Key is required')
+    })
+    if (result.isConfirmed && result.value) {
+      const newKey = result.value
       pushHistory(data, 'rename')
       const next = renameKeyAtPath(data, path, newKey)
       setData(next)
-      // update selected path if it pointed to the renamed node
       if (JSON.stringify(selectedPath) === JSON.stringify(path)) {
         setSelectedPath([...path.slice(0, -1), newKey])
       }
-      setModalAction(null)
+    }
+  }
+
+  async function showDeleteSwal(path) {
+    if (!Array.isArray(path) || path.length === 1) return
+    const last = path[path.length - 1]
+    const { isConfirmed } = await Swal.fire({
+      title: 'Confirm Delete',
+      text: `Delete node ${last}? This cannot be undone.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Delete',
+    })
+    if (isConfirmed) {
+      try {
+        pushHistory(data, 'delete')
+        const next = deleteAtPath(data, path)
+        setData(next)
+        // adjust selectedPath if needed
+        const topKeys = Object.keys(next)
+        setSelectedPath(topKeys.length ? [topKeys[0]] : [])
+      } catch {
+        // ignore for now
+      }
     }
   }
 
@@ -253,10 +286,10 @@ export default function App() {
             <span className="text-lg font-semibold">Tree Explorer</span>
           </div>
           <div className="flex items-center gap-2">
-            <button className="px-2 py-1 md:px-3 md:py-1 bg-blue-600 text-white rounded text-sm md:text-base" onClick={() => setShowImport(true)}>Import</button>
+            <button className="px-2 py-1 md:px-3 md:py-1 bg-blue-600 text-white rounded text-sm md:text-base" onClick={() => showImportSwal()}>Import</button>
             <button className="px-2 py-1 md:px-3 md:py-1 border rounded text-sm md:text-base" onClick={() => { pushHistory(data, 'reset'); localStorage.removeItem(STORAGE_KEY); setData(defaultData) }}>Reset</button>
             <button className="px-2 py-1 md:px-3 md:py-1 border rounded text-sm md:text-base" onClick={undo} disabled={history.length===0}>Undo</button>
-            <button className="px-2 py-1 md:px-3 md:py-1 border rounded text-sm md:text-base" onClick={() => { setModalAction({ type: 'add', path: [] }); setModalKeyInput(''); setModalValueInput('') }}>Add Root</button>
+            <button className="px-2 py-1 md:px-3 md:py-1 border rounded text-sm md:text-base" onClick={() => showAddSwal([])}>Add Root</button>
           </div>
         </div>
       </header>
@@ -308,44 +341,7 @@ export default function App() {
     </div>
   </div>
 
-      {showImport && (
-        <Modal title="Import JSON" onClose={() => setShowImport(false)}>
-          <textarea value={importText} onChange={(e) => setImportText(e.target.value)} rows={10} className="w-full p-2 border rounded bg-white text-black" />
-          {importError && <p className="text-red-600 mt-2">{importError}</p>}
-          <div className="mt-3 flex justify-end gap-2">
-            <button className="px-3 py-1 border rounded" onClick={() => setShowImport(false)}>Cancel</button>
-            <button className="px-3 py-1 bg-blue-600 text-white rounded" onClick={handleImport}>Import</button>
-          </div>
-        </Modal>
-      )}
-
-      {confirmDelete && (
-        <ConfirmModal
-          title="Confirm Delete"
-          message={`Delete node ${confirmDelete[confirmDelete.length - 1]}? This cannot be undone.`}
-          onCancel={() => setConfirmDelete(null)}
-          onConfirm={performDelete}
-        />
-      )}
-
-      {modalAction && (
-        <Modal title={modalAction.type === 'add' ? 'Add node' : 'Rename node'} onClose={() => setModalAction(null)}>
-          <div className="mb-2">
-            <label className="block text-sm font-medium mb-1">Key</label>
-            <input className="w-full p-2 border rounded" value={modalKeyInput} onChange={(e) => setModalKeyInput(e.target.value)} />
-          </div>
-          {modalAction.type === 'add' && (
-            <div className="mb-2">
-              <label className="block text-sm font-medium mb-1">Value (JSON or plain)</label>
-              <textarea rows={4} className="w-full p-2 border rounded" value={modalValueInput} onChange={(e) => setModalValueInput(e.target.value)} />
-            </div>
-          )}
-          <div className="flex justify-end gap-2">
-            <button className="px-3 py-1 border rounded" onClick={() => setModalAction(null)}>Cancel</button>
-            <button className="px-3 py-1 bg-blue-600 text-white rounded" onClick={performModalAction}>{modalAction.type === 'add' ? 'Add' : 'Rename'}</button>
-          </div>
-        </Modal>
-      )}
+      {/* Using SweetAlert2 for import/add/rename/delete modals; no local Modal components rendered here */}
     </div>
   )
 }
