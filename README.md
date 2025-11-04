@@ -7,7 +7,9 @@ Live demo
 
 - Replace the placeholder below with your deployed Vercel URL after you deploy.
 
+
 **LIVE DEMO:** https://tree-explore-task.vercel.app/
+
 
 Implemented features
 --------------------
@@ -152,4 +154,36 @@ Usage (PowerShell):
 ```
 
 If you prefer Docker Desktop GUI, open the `Images` pane, find `tree-explorer-dev`, click Run and provide the same port mapping (5173) and a bind mount for your project folder if you want live reload. The PowerShell helper is handy if you want one-liners instead of clicking through the GUI.
+
+Assessment implementation notes
+--------------------------------
+
+This repository contains a working implementation of the Tree Explorer assessment described in the prompt. Summary of what is implemented:
+
+- Framework: React (Vite) — chosen because the project already used React and Vite provides a fast dev loop.
+- Left pane: Collapsible JSON tree (Explorer-style) implemented in `src/components/TreeNode.jsx` and rendered from `src/App.jsx`.
+- Import: `Import` button opens a modal (SweetAlert2) where you can paste JSON to replace the current tree.
+- Select & Breadcrumb: Clicking a node selects it and the path is shown in the breadcrumb component (`src/components/Breadcrumb.jsx`). Clicking breadcrumb segments navigates.
+- Delete: Nodes can be deleted (delete button in each node). Deleting shows a confirmation modal and root cannot be deleted.
+- Add & Rename: Each node has Add and Rename actions implemented via SweetAlert2 modal inputs.
+- Undo: Undo for the last action (add/delete/rename/import) is implemented and accessible through the Undo button in the header (history up to 50 actions).
+- Persistence: Tree state persists to `localStorage` (key: `tree-explorer:data`) so page refresh preserves changes.
+- Right pane: Dashed panel shows the breadcrumb and a formatted, read-only JSON view of the full object (`src/components/JSONView.jsx`).
+
+Bonus / Notes
+-------------
+- Implemented bonuses: Add, Rename, Undo, formatted JSON view, breadcrumb navigation.
+- Not implemented in this iteration: Drag-and-drop reparenting. This can be added with a lightweight library like `dnd-kit` or a custom drag/drop implementation.
+
+How to run (short)
+------------------
+- Development (fast): `npm install` then `npm run dev` and open the URL Vite reports (usually http://localhost:5173).
+- Production (Docker): `docker build -f Dockerfile.prod -t tree-explorer-prod .` then `docker run -d --name tree-explorer-prod -p 8080:80 tree-explorer-prod` (then open http://localhost:8080).
+
+Notes / trade-offs
+------------------
+- The app stores state in `localStorage` for simplicity and portability. For very large JSON payloads a more robust storage (IndexedDB) or streaming parsing would be advisable.
+- The undo stack stores up to 50 history snapshots. This is simple and reliable, but snapshots may be memory-heavy for very large objects.
+- Drag-and-drop reparenting was left out to keep the implementation focused and small; it can be added with a controlled DnD library.
+
 
