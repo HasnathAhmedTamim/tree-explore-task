@@ -91,20 +91,46 @@ Development (PowerShell)
 npm install
 npm run dev
 # open http://localhost:5173
+# Tree Explorer
+
+A compact React + Vite app for exploring and editing JSON as a collapsible tree.
+
+Live demo
+---------
+
+**LIVE DEMO:** https://tree-explore-task.vercel.app/
+
+Quick summary
+-------------
+- Import JSON and render it as a collapsible tree
+- Add / Rename / Delete nodes (root delete prevented)
+- Undo stack (in-memory), keyboard navigation, and accessibility improvements
+- Persistence via localStorage (key: `tree-explorer:data`)
+
+Quickstart
+----------
+
+Prerequisites: Node.js 18+ and npm
+
+Development (PowerShell):
+
+```powershell
+npm install
+npm run dev
+# open http://localhost:5173 (or the port Vite reports)
 ```
 
-Build & preview (production bundle locally)
+Build & preview:
 
 ```powershell
 npm run build
 npm run preview
-# preview serves the built dist static assets
 ```
 
-Docker (build and run)
-----------------------
+Docker
+------
 
-This repo includes a two-stage Dockerfile that builds the app with Node and serves it with nginx.
+Build and run the included two-stage image:
 
 ```powershell
 docker build -t tree-explorer .
@@ -112,59 +138,23 @@ docker run -p 8080:80 tree-explorer
 # open http://localhost:8080
 ```
 
-Deploy to Netlify / Vercel (quick)
----------------------------------
-
-Netlify (drag & drop)
-
-1. Run `npm run build` locally.
-2. Drag the generated `dist/` folder onto Netlify's site deploy panel.
-3. Netlify will host it and provide a public URL.
-
-Vercel (CLI or dashboard)
-
-1. Install Vercel CLI or connect the repo from the Vercel dashboard.
-2. Run `vercel` in the project root and follow prompts, or connect the Git repo in the dashboard for automatic deploys.
+Deploy
+------
+- Netlify: build and drag the `dist/` folder onto Netlify's deploy panel.
+- Vercel: connect the repo in the dashboard or run `vercel` from the project root.
 
 Files of interest
 -----------------
+- `src/App.jsx` — app shell, state and layout
+- `src/components/TreeNode.jsx` — recursive tree renderer and actions
+- `src/utils/tree.js` — immutable helpers for tree operations
+- `src/index.css` — Tailwind + small visual tweaks
 
-- `src/App.jsx` — main app and layout (grid, sidebar, panels)
-- `src/components/TreeNode.jsx` — recursive tree node renderer and action buttons
-- `src/utils/tree.js` — immutable helpers for add/rename/delete/get/set operations on the object tree
-- `src/index.css` — Tailwind import + custom connector / panel styling
-- `Dockerfile`, `.dockerignore` — containerization
+Notes & next steps
+------------------
+- Persistence is local only. For multi-user or server persistence, wire an API/backend.
+- Recommended extras: unit tests for `src/utils/tree.js`, search/virtualization for very large JSON, and an accessible tooltip for long labels.
 
-Notes, trade-offs & missing features
------------------------------------
-
-- Persistence is local only (localStorage). For real multi-user collaboration or server-side persistence you would wire an API/backend.
-- Undo is an in-memory stack (kept in the page session). It is not persisted across page reloads.
-- Arrays are supported in a limited way (deleting by index may work), but array-specific editing UX (insert at index, reordering) is not implemented.
-- Drag-and-drop reordering of nodes is not implemented.
-- Unit tests and CI are not included in this repository; adding tests (Jest or vitest) for `src/utils/tree.js` is recommended for production hardening.
-
-Accessibility & keyboard support
---------------------------------
-
-- Nodes and action buttons are keyboard-focusable and include visible focus rings.
-- Keyboard navigation (Arrow keys + Enter) is supported for tree traversal and collapsing.
-- Long labels include `title` and `aria-label`. An optional focus-visible tooltip component could be added for better keyboard discoverability.
-
-Development notes
------------------
-
-- Local state is serialized under localStorage key `tree-explorer:data`.
-- Tailwind classes are used across components. Small visual tuning is done in `src/index.css` (connectors, panel padding, mono JSON wrapping).
-
+If you want this README even shorter or tailored for a portfolio page, tell me which details to remove or highlight.
+````
 Recommended next improvements (optional)
----------------------------------------
-
-- Add unit tests for `src/utils/tree.js` and a small CI pipeline (GitHub Actions) to run lint/build/tests on PRs.
-- Replace native `title` with an accessible tooltip component visible on focus for keyboard users.
-- Add a mobile drawer for the sidebar if you want a more compact phone UX.
-- Add an optional server-backed persistence layer and make undo operate across sessions.
-
-If you'd like, I can apply any of the recommended improvements (tests, tooltip, mobile drawer, CI, or a live deploy). Tell me which and I'll implement it.
-
-``` 
